@@ -9,6 +9,7 @@ import 'react-datepicker/dist/react-datepicker.css';
 import '@/styles/react-datepicker-dark.css';
 import { Subscription } from '@/types';
 import { getRandomColor } from '@/lib/utils';
+import { IconType, ICON_OPTIONS } from '@/enums';
 import styles from './SubscriptionModal.module.css';
 
 const currencyList = require('currency-symbol-map/map');
@@ -32,8 +33,7 @@ export default function SubscriptionModal({
   const [name, setName] = useState('');
   const [amount, setAmount] = useState('');
   const [dueDate, setDueDate] = useState<Date | null>(null);
-  const [icon, setIcon] = useState('');
-  const [iconInput, setIconInput] = useState('');
+  const [icon, setIcon] = useState<IconType | null>(null);
   const [color, setColor] = useState('');
   const [account, setAccount] = useState('');
   const [autopay, setAutopay] = useState(false);
@@ -54,8 +54,7 @@ export default function SubscriptionModal({
         : (selectedSubscription.due_date 
           ? new Date(selectedSubscription.due_date) 
           : null));
-      setIcon(selectedSubscription.icon || '');
-      setIconInput(selectedSubscription.icon || '');
+      setIcon(selectedSubscription.icon as IconType || null);
       setColor(selectedSubscription.color || '');
       setAccount(selectedSubscription.account || '');
       setAutopay(selectedSubscription.autopay);
@@ -79,15 +78,21 @@ export default function SubscriptionModal({
     }
   }, [selectedSubscription, selectedDate, defaultCurrency]);
 
+  const getRandomIcon = (): IconType => {
+    const iconValues = Object.values(IconType);
+    return iconValues[Math.floor(Math.random() * iconValues.length)];
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (name && amount && dueDate && icon) {
+    if (name && amount && dueDate) {
+      const finalIcon = icon || getRandomIcon();
       const subscription: Subscription = {
         id: id || undefined,
         name,
         amount: parseFloat(amount),
         dueDate: dueDate.toISOString().split('T')[0],
-        icon,
+        icon: finalIcon,
         color,
         account,
         autopay,
@@ -104,9 +109,8 @@ export default function SubscriptionModal({
     }
   };
 
-  const handleIconChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setIconInput(e.target.value);
-    setIcon(e.target.value.toLowerCase());
+  const handleIconChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setIcon(e.target.value as IconType);
   };
 
   const handleTagChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -178,13 +182,18 @@ export default function SubscriptionModal({
           <div className={styles.formGroup}>
             <label htmlFor="icon">Icon</label>
             <div className={styles.iconInputContainer}>
-              <input
+              <select
                 id="icon"
-                type="text"
-                value={iconInput}
+                value={icon || ''}
                 onChange={handleIconChange}
-                placeholder="Enter Material Design Icon name"
-              />
+              >
+                <option value="">Select an icon</option>
+                {ICON_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
               <span className={styles.iconPreview}>
                 <Icon icon={`mdi:${icon || 'help-circle'}`} />
               </span>
