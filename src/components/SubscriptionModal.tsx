@@ -45,6 +45,29 @@ export default function SubscriptionModal({
   const [tags, setTags] = useState<string[]>([]);
   const [errors, setErrors] = useState<{[key: string]: boolean}>({});
 
+  // Currency preference key for localStorage
+  const CURRENCY_PREFERENCE_KEY = 'subscription-manager-currency-preference';
+
+  // Load currency preference from localStorage
+  const loadCurrencyPreference = () => {
+    try {
+      const savedCurrency = localStorage.getItem(CURRENCY_PREFERENCE_KEY);
+      return savedCurrency || 'USD';
+    } catch (error) {
+      console.warn('Failed to load currency preference from localStorage:', error);
+      return 'USD';
+    }
+  };
+
+  // Save currency preference to localStorage
+  const saveCurrencyPreference = (currency: string) => {
+    try {
+      localStorage.setItem(CURRENCY_PREFERENCE_KEY, currency);
+    } catch (error) {
+      console.warn('Failed to save currency preference to localStorage:', error);
+    }
+  };
+
   useEffect(() => {
     if (selectedSubscription) {
       setId(selectedSubscription.id || null);
@@ -73,7 +96,9 @@ export default function SubscriptionModal({
       setIntervalValue(1);
       setIntervalUnit('months');
       setAccount('');
-      setCurrency(defaultCurrency);
+      // Load currency preference for new subscriptions
+      const preferredCurrency = loadCurrencyPreference();
+      setCurrency(preferredCurrency);
       setTags([]);
       setTagInput('');
     }
@@ -123,6 +148,13 @@ export default function SubscriptionModal({
 
   const handleIconChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setIcon(e.target.value as IconType);
+  };
+
+  const handleCurrencyChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const newCurrency = e.target.value;
+    setCurrency(newCurrency);
+    // Save currency preference to localStorage
+    saveCurrencyPreference(newCurrency);
   };
 
   const handleTagChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -275,7 +307,7 @@ export default function SubscriptionModal({
             <select
               id="currency"
               value={currency}
-              onChange={(e) => setCurrency(e.target.value)}
+              onChange={handleCurrencyChange}
             >
               {Object.keys(currencyList).map((curr) => (
                 <option key={curr} value={curr}>
