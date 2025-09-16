@@ -43,6 +43,7 @@ export default function SubscriptionModal({
   const [currency, setCurrency] = useState(defaultCurrency);
   const [tagInput, setTagInput] = useState('');
   const [tags, setTags] = useState<string[]>([]);
+  const [errors, setErrors] = useState<{[key: string]: boolean}>({});
 
   useEffect(() => {
     if (selectedSubscription) {
@@ -85,28 +86,39 @@ export default function SubscriptionModal({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (name && amount && dueDate) {
-      const finalIcon = icon || getRandomIcon();
-      const subscription: Subscription = {
-        id: id || undefined,
-        name,
-        amount: parseFloat(amount),
-        dueDate: dueDate.toISOString().split('T')[0],
-        icon: finalIcon,
-        color,
-        account,
-        autopay,
-        intervalValue: intervalValue ? parseInt(String(intervalValue)) : 1,
-        intervalUnit: intervalUnit || 'months',
-        notify,
-        currency: currency === defaultCurrency ? 'default' : currency,
-        tags
-      };
-      onSave(subscription);
-      onClose();
-    } else {
-      alert('Please fill in all required fields.');
+    
+    // Reset errors
+    setErrors({});
+    
+    // Check validation
+    const newErrors: {[key: string]: boolean} = {};
+    if (!name.trim()) newErrors.name = true;
+    if (!amount.trim() || isNaN(parseFloat(amount)) || parseFloat(amount) <= 0) newErrors.amount = true;
+    if (!dueDate) newErrors.dueDate = true;
+    
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return;
     }
+    
+    const finalIcon = icon || getRandomIcon();
+    const subscription: Subscription = {
+      id: id || undefined,
+      name,
+      amount: parseFloat(amount),
+      dueDate: dueDate!.toISOString().split('T')[0],
+      icon: finalIcon,
+      color,
+      account,
+      autopay,
+      intervalValue: intervalValue ? parseInt(String(intervalValue)) : 1,
+      intervalUnit: intervalUnit || 'months',
+      notify,
+      currency: currency === defaultCurrency ? 'default' : currency,
+      tags
+    };
+    onSave(subscription);
+    onClose();
   };
 
   const handleIconChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -150,6 +162,7 @@ export default function SubscriptionModal({
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="Enter subscription name"
+              className={errors.name ? styles.error : ''}
             />
           </div>
           <div className={styles.formGroup}>
@@ -161,6 +174,7 @@ export default function SubscriptionModal({
               onChange={(e) => setAmount(e.target.value)}
               placeholder="Enter amount"
               step="0.01"
+              className={errors.amount ? styles.error : ''}
             />
           </div>
           <div className={`${styles.formGroup} ${styles.datePickerGroup}`}>
@@ -171,7 +185,7 @@ export default function SubscriptionModal({
               onChange={(date: Date | null) => date && setDueDate(date)}
               dateFormat="d MMM yyyy"
               customInput={
-                <button type="button" className={styles.datePickerButton}>
+                <button type="button" className={`${styles.datePickerButton} ${errors.dueDate ? styles.error : ''}`}>
                   {formatDate(dueDate)}
                 </button>
               }

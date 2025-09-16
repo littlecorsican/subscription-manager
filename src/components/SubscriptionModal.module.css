@@ -57,6 +57,12 @@
   color: #fff;
 }
 
+.formGroup input.error,
+.formGroup select.error {
+  border: 1px solid #ff4444;
+  box-shadow: 0 0 5px rgba(255, 68, 68, 0.3);
+}
+
 .modalActions {
   display: flex;
   flex-wrap: wrap;
@@ -195,6 +201,11 @@ input:checked + .slider:before {
 
 .datePickerButton:hover {
   background-color: #3c3c3c;
+}
+
+.datePickerButton.error {
+  border: 1px solid #ff4444;
+  box-shadow: 0 0 5px rgba(255, 68, 68, 0.3);
 }
 
 .autopayStatus {
